@@ -90,12 +90,7 @@ const intersected = intersection(line1, line2);
 console.log("done calculating intersection");
 
 const result = Array.from(intersected)
-  .map(str =>
-    str
-      .split(",")
-      .map(Number)
-      .reduce((acc, val) => acc + Math.abs(val), 0)
-  )
+  .map(coordinate => line1.indexOf(coordinate) + line2.indexOf(coordinate))
   .sort((a, b) => a - b)
   .filter(Boolean);
 
