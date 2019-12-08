@@ -28,7 +28,7 @@ function permutations(digits) {
   return results;
 }
 
-const phaseSpace = permutations([0, 1, 2, 3, 4]);
+const phaseSpace = permutations([5, 6, 7, 8, 9]);
 
 const INPUT_A = 0;
 
@@ -38,13 +38,29 @@ const program = fs
   .split(",")
   .map(input => parseInt(input, 10));
 
-const outputs = phaseSpace.map(phases => {
-  const resultA = VM([...program], [phases[0], INPUT_A])[0];
-  const resultB = VM([...program], [phases[1], resultA])[0];
-  const resultC = VM([...program], [phases[2], resultB])[0];
-  const resultD = VM([...program], [phases[3], resultC])[0];
-  const resultE = VM([...program], [phases[4], resultD])[0];
-  return resultE;
+const outputs = permutations([5, 6, 7, 8, 9]).map(phases => {
+  const inputs = [
+    [phases[0], 0],
+    [phases[1]],
+    [phases[2]],
+    [phases[3]],
+    [phases[4]]
+  ];
+  const outputs = [[], [], [], [], []];
+  const VMS = [];
+  for (let i = 0; i < 5; i++) {
+    VMS.push(VM([...program], inputs[i], outputs[i]));
+  }
+  let i = 0;
+  while (true) {
+    const currentVM = i % 5;
+    const nextVM = (i + 1) % 5;
+    if (VMS[currentVM].run() && i % 5 === 4) {
+      return outputs[currentVM][outputs[currentVM].length - 1];
+    }
+    inputs[nextVM].push(outputs[currentVM][outputs[currentVM].length - 1]);
+    i++;
+  }
 });
 
 console.log(Math.max(...outputs));

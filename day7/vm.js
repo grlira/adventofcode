@@ -25,8 +25,10 @@ function fatal(message) {
   process.exit(1);
 }
 
-function VM(memory, inputs) {
-  const outputs = [];
+function VM(memory, inputs, outputs) {
+  let programCounter = 0;
+  let shouldSuspend = false;
+
   function getParam(param, memory, mode = 0) {
     switch (mode) {
       case 0:
@@ -54,6 +56,10 @@ function VM(memory, inputs) {
 
       case OP_INPUT:
         return (memory, dst) => {
+          if (inputs.length === 0) {
+            shouldSuspend = true;
+            return;
+          }
           const input = Number(inputs.shift());
           memory[dst] = input;
         };
@@ -122,28 +128,39 @@ function VM(memory, inputs) {
     };
   }
 
-  let programCounter = 0;
+  function run() {
+    shouldSuspend = false;
+    while (true) {
+      const opcode = memory[programCounter];
 
-  while (true) {
-    const opcode = memory[programCounter];
+      if (opcode === OP_HALT) {
+        return true;
+      }
 
-    if (opcode === OP_HALT) {
-      return outputs;
-    }
+      const { op, instructionLength } = decoder(opcode);
 
-    const { op, instructionLength } = decoder(opcode);
+      const newPc = op(
+        memory,
+        ...memory.slice(programCounter + 1, programCounter + instructionLength)
+      );
 
-    const newPc = op(
-      memory,
-      ...memory.slice(programCounter + 1, programCounter + instructionLength)
-    );
+      if (shouldSuspend) {
+        return false;
+      }
 
-    if (Number.isInteger(newPc)) {
-      programCounter = newPc;
-    } else {
-      programCounter += instructionLength;
+      if (Number.isInteger(newPc)) {
+        programCounter = newPc;
+      } else {
+        programCounter += instructionLength;
+      }
     }
   }
+
+  return {
+    run,
+    inputs,
+    outputs
+  };
 }
 
 module.exports = {
