@@ -23,23 +23,35 @@ const layers = [];
 for (let l = 0; l < numLayers; l++) {
   layers.push([]);
   for (let h = 0; h < height; h++) {
+    layers[l].push([]);
     for (let w = 0; w < width; w++) {
-      layers[l].push(image[l * height * width + h * width + w]);
+      layers[l][h].push(image[l * height * width + h * width + w]);
     }
   }
 }
 
-const layerWithFewest0Digits = layers
-  .map((layer, i) => ({
-    i,
-    count: countDigits(layer, 0)
-  }))
-  .reduce(
-    (curr, candidate) => (curr.count > candidate.count ? candidate : curr),
-    { count: 99999 }
-  ).i;
+const finalImage = [];
 
-console.log(
-  countDigits(layers[layerWithFewest0Digits], 1) *
-    countDigits(layers[layerWithFewest0Digits], 2)
-);
+for (let h = 0; h < height; h++) {
+  finalImage.push([]);
+  for (let w = 0; w < width; w++) {
+    finalImage[h].push(2);
+  }
+}
+
+for (let l = 0; l < numLayers; l++) {
+  for (let h = 0; h < height; h++) {
+    for (let w = 0; w < width; w++) {
+      finalImage[h][w] =
+        finalImage[h][w] === 2 ? layers[l][h][w] : finalImage[h][w];
+    }
+  }
+}
+
+for (let h = 0; h < height; h++) {
+  let row = "";
+  for (let w = 0; w < width; w++) {
+    row = `${row}${finalImage[h][w] ? "*" : " "}`;
+  }
+  console.log(row);
+}
