@@ -11,6 +11,14 @@ function vectorToString({ x, y }) {
   return `(${x},${y})`;
 }
 
+function radToDeg(rad) {
+  return (rad * 180) / Math.PI;
+}
+
+function polarToString({ r, theta, theta0 }) {
+  return `(r:${r}, theta:${theta})`;
+}
+
 function canSee(source, target, map) {
   const vector = {
     x: target.x - source.x,
@@ -23,21 +31,11 @@ function canSee(source, target, map) {
     y: vector.y / greatestCommonDivisor
   };
 
-  /*  console.log(
-    `fundamental vector between ${vectorToString(source)} and ${vectorToString(
-      target
-    )} is ${vectorToString(fundamentalVector)} based on ${vectorToString(
-      vector
-    )}`
-  );*/
-
   for (
     let x = source.x + fundamentalVector.x, y = source.y + fundamentalVector.y;
     x !== target.x || y !== target.y;
     x += fundamentalVector.x, y += fundamentalVector.y
   ) {
-    /*console.log("curr", vectorToString({ x, y }));
-    console.log("target", vectorToString(target));*/
     if (map[y][x]) {
       return false;
     }
@@ -81,3 +79,64 @@ console.log(
   "Part 1: ",
   Math.max(...totalVisible.map(({ totalVisible }) => totalVisible))
 );
+
+const best = totalVisible.reduce(
+  (best, candidate) =>
+    candidate.totalVisible > best.totalVisible ? candidate : best,
+  totalVisible[0]
+);
+
+console.log(best);
+
+// make best the center
+const translated = asteroidCoordinates.map(({ x, y }) => ({
+  x: x - best.x,
+  y: y - best.y
+}));
+
+console.log("translated", translated);
+
+const polar = translated
+  .filter(({ x, y }) => x !== 0 || y !== 0) // get rid of best
+  .map(({ x, y }) => {
+    return {
+      r: Math.sqrt(x * x + y * y),
+      theta: (radToDeg(Math.atan2(y, x)) - 90 + 180 + 360) % 360,
+      x: x + best.x,
+      y: y + best.y
+    };
+  })
+  .sort((a, b) => {
+    if (a.theta < b.theta) {
+      return -1;
+    }
+    if (a.theta > b.theta) {
+      return 1;
+    }
+
+    if (a.r < b.r) {
+      return -1;
+    }
+    if (a.r > b.r) {
+      return 1;
+    }
+
+    return 0;
+  });
+
+polar.forEach(coords => {
+  console.log(`${vectorToString(coords)} -> ${polarToString(coords)}`);
+});
+
+let count = 1;
+let currTheta = null;
+while (count <= 200 && polar.length > 1) {
+  const target = polar.shift();
+  if (target.theta === currTheta) {
+    polar.push(target);
+    continue;
+  }
+  console.log(`${count}: zapping at ${vectorToString(target)}`);
+  currTheta = target.theta;
+  count++;
+}
