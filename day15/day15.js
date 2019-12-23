@@ -178,3 +178,36 @@ const oxygenCoordinates = (function() {
   print(map);
   return oxygenCoordinates;
 })();
+
+const visited = new Set([v(oxygenCoordinates)]);
+const queue = [];
+queue.push(
+  ...expand(oxygenCoordinates, visited, map).map(nextDirection => ({
+    nextDirection,
+    sourceCoords: oxygenCoordinates,
+    depth: 0
+  }))
+);
+
+let maxDepth = -Infinity;
+while (queue.length !== 0) {
+  const { nextDirection, sourceCoords, depth } = queue.shift();
+  const newCoords = {
+    x: sourceCoords.x + DX[nextDirection],
+    y: sourceCoords.y + DY[nextDirection]
+  };
+  visited.add(`${v(newCoords)}`);
+  const newDirections = expand(newCoords, visited, map);
+
+  queue.push(
+    ...newDirections.map(nextDirection => ({
+      nextDirection,
+      sourceCoords: newCoords,
+      depth: depth + 1
+    }))
+  );
+  if (depth + 1 > maxDepth) {
+    maxDepth = depth + 1;
+  }
+}
+console.log(`Part 2: ${maxDepth}`);
