@@ -3,9 +3,17 @@ function clone(obj) {
 }
 
 function flatten(arr) {
-  return Array.isArray(arr)
-    ? arr.reduce((acc, elem) => [...acc, ...flatten(elem)], [])
-    : [arr];
+  const acc = [];
+  const queue = [arr];
+  while (queue.length !== 0) {
+    const item = queue.shift();
+    if (Array.isArray(item)) {
+      queue.unshift(...item);
+      continue;
+    }
+    acc.push(item);
+  }
+  return acc;
 }
 
 function zip(arr1, arr2) {

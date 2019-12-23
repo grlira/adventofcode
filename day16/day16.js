@@ -23,6 +23,7 @@ function getCoefficients(position, length) {
   if (coefficientsMemo[`${position}-${length}`]) {
     return coefficientsMemo[`${position}-${length}`];
   }
+
   const coefficients = pattern(position, length);
   coefficientsMemo[`${position}-${length}`] = coefficients;
   return coefficients;
@@ -31,12 +32,20 @@ function getCoefficients(position, length) {
 function phase(input) {
   return repeat(input, input.length)
     .map((line, index) => {
+      if (index + 1 > line.length / 2) {
+        let result = 0;
+        for (let i = index; i < line.length; i++) {
+          result += line[i];
+        }
+        return result;
+      }
+
       const coefficients = getCoefficients(index + 1, line.length);
-      const effectiveLine = line.slice(index);
-      const effectiveCoefficients = coefficients.slice(index);
-      return zip(effectiveLine, effectiveCoefficients)
-        .map(([a, b]) => a * b)
-        .reduce(sum, 0);
+      let result = 0;
+      for (let i = index; i < line.length; i++) {
+        result += line[i] * coefficients[i];
+      }
+      return result;
     })
     .map(i => Math.abs(i % 10));
 }
@@ -52,8 +61,20 @@ const number = fs
   .split("")
   .map(Number);
 
-let temp = number;
-for (let i = 0; i < 100; i++) {
-  temp = phase(temp);
+function part1() {
+  let temp = number;
+  for (let i = 0; i < 100; i++) {
+    temp = phase(temp);
+  }
+  console.log(`Part 1: ${temp.slice(0, 8).join("")}`);
 }
-console.log(`Part 1: ${temp.slice(0, 8).join("")}`);
+
+function part2() {
+  const part2Input = flatten(repeat(number, 10000));
+  let temp = number;
+  for (let i = 0; i < 100; i++) {
+    temp = phase(temp);
+  }
+}
+
+part2();
